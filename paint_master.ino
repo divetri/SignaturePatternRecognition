@@ -1,14 +1,6 @@
-// Paint example specifically for the TFTLCD breakout board.
-// If using the Arduino shield, use the tftpaint_shield.pde sketch instead!
-// DOES NOT CURRENTLY WORK ON ARDUINO LEONARDO
-//Technical support:goodtft@163.com
-
 #include <Elegoo_GFX.h>    // Core graphics library
 #include <Elegoo_TFTLCD.h> // Hardware-specific library
 #include <TouchScreen.h>
-
-
-
 
 #if defined(__SAM3X8E__)
     #undef __FlashStringHelper::F(string_literal)
@@ -64,7 +56,6 @@ Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 
 void setup(void) {
   Serial.begin(9600);
-  Serial.println(F("Paint!"));
   
   tft.reset();
   
@@ -77,7 +68,6 @@ void setup(void) {
   tft.fillScreen(WHITE); 
   tft.fillRect(0, 0, 40, 40, RED);
   pinMode(13, OUTPUT);
-
 }
 
 #define MINPRESSURE 1
@@ -103,17 +93,18 @@ void loop()
     //p.x = tft.width()-map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
     p.y = (tft.height()-map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
      //p.y = map(p.y, TS_MINY, TS_MAXY, tft.height(), 0);
+      Serial.print(p.x);Serial.print(",");Serial.print(p.y);Serial.print("\n");
       tft.fillCircle(p.x, p.y, PENRADIUS, BLACK);
-      Serial.write(p.x, p.y);
+      
+    
     if (awal==0){ 
       px0 = p.x; py0 = p.y;
       awal=1;
     }
    else {
-      px1 = px0; py1 = py0;
+       px1 = px0; py1 = py0;
       px0 = p.x; py0 = p.y;
-      tft.drawLine(px1, py1, px0, py0, BLACK);
-           
+      tft.drawLine(px1, py1, px0, py0, BLACK);       
    }
   if (waktu>100){
     waktu=0;
