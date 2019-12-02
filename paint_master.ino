@@ -10,10 +10,10 @@ int awal=0,waktu=0;
 #define XM A2
 #define YM 9
 #define XP 8
-#define TS_MINX 125
+#define TS_MINX 120
 #define TS_MAXX 900
-#define TS_MINY 90
-#define TS_MAXY 900
+#define TS_MINY 70
+#define TS_MAXY 920
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 #define MINPRESSURE 1
 #define MAXPRESSURE 1000
@@ -32,6 +32,7 @@ int px0, px1, py0, py1;
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
 Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
+#define boxsize 40
 #define PENRADIUS 0.5
 void setup(void) {
   Serial.begin(9600);
@@ -41,7 +42,8 @@ void setup(void) {
   tft.begin(identifier);
   tft.setRotation(2);
   tft.fillScreen(WHITE); 
-  tft.fillRect(0, 0, 40, 40, RED);
+  tft.fillRect(0, 0, 80, 40, RED);
+  tft.fillRect(80, 0, 80, 40, BLACK);
   pinMode(13, OUTPUT);
 }
 void loop()
@@ -53,22 +55,35 @@ void loop()
   pinMode(XM, OUTPUT);
   pinMode(YP, OUTPUT);
   if (p.z > MINPRESSURE && p.z < MAXPRESSURE){
-      p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
-      p.y = (tft.height()-map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
+    p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
+    p.y = (tft.height()-map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
+    if (((p.y-PENRADIUS) > 40) && ((p.y+PENRADIUS) < tft.height())) {
       Serial.print(p.x);Serial.print(",");Serial.print(p.y);Serial.print("\n");
-      tft.drawCircle(p.x, p.y, PENRADIUS , BLACK);
+      tft.fillCircle(p.x, p.y, PENRADIUS , BLACK);
       if (awal==0){ 
         px0 = p.x; py0 = p.y;
+        waktu=0;
         awal=1;
       }
       else{
         px1 = px0; py1 = py0;
         px0 = p.x; py0 = p.y;
-        tft.drawLine(px1, py1, px0, py0, BLACK);       
+        tft.drawLine(px1, py1, px0, py0, BLACK);  
+        waktu=0;     
       }
-    if(waktu>100){
+    }
+    if (p.y < 40) {
+       if (p.x < 40) {
+         waktu=0;
+         awal=0;
+         digitalWrite(LCD_RESET, LOW);
+         setup(); 
+       }
+    }
+    
+  }
+  if(waktu>100){
         waktu=0;
         awal = 0;
-    }
-  }
+      }
 }
