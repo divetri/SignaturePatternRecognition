@@ -8,8 +8,8 @@ boolean parsing = false;
 void setup() {
   Serial.begin(9600);
   if (!SD.begin(CS_PIN)) {
-    Serial.println("Falha, verifique se o cartão está presente.");
-    //programa encerrrado
+    Serial.println("ccc");
+
     return;
   }
   dataIn = "";
@@ -47,10 +47,8 @@ void parsingData() {
   py = dt[1].toInt();
   File testfile = SD.open("testdata.txt", FILE_WRITE);
   if (testfile) {
-    testfile.print("x : ");
     testfile.print(px);
-    testfile.print("\n");
-    testfile.print("y : ");
+    testfile.print(",");
     testfile.print(py);
     testfile.print("\n");
 
