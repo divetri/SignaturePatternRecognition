@@ -1,9 +1,7 @@
 #include <SD.h>
 #define CS_PIN D8
-String dataIn;
-String dt[2];
-int i, px, py;
-boolean parsing = false;
+String dataIn,px;
+boolean sending = false;
 
 void setup() {
   Serial.begin(9600);
@@ -19,38 +17,20 @@ void loop() {
     char inChar = (char)Serial.read();
     dataIn += inChar;
     if (inChar == '\n') {
-      parsing = true;
+      sending = true;
     }
   }
 
-  if (parsing) {
-    parsingData();
-    parsing = false;
+  if (sending) {
+    sendingData();
+    sending = false;
     dataIn = "";
   }
 }
-void parsingData() {
-  int j = 0;
-  dt[j] = "";
-  for (i = 0; i < dataIn.length(); i++) {
-    if (dataIn[i] == ',')
-    {
-      j++;
-      dt[j] = "";
-    }
-    else
-    {
-      dt[j] = dt[j] + dataIn[i];
-    }
-  }
-  px = dt[0].toInt();
-  py = dt[1].toInt();
+void sendingData() {
+  px = dataIn;
   File testfile = SD.open("testdata.txt", FILE_WRITE);
   if (testfile) {
     testfile.print(px);
-    testfile.print(",");
-    testfile.print(py);
-    testfile.print("\n");
-
   }
 }
