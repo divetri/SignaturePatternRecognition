@@ -1,10 +1,6 @@
 #include <Elegoo_GFX.h>    // Core graphics library
 #include <Elegoo_TFTLCD.h> // Hardware-specific library
 #include <TouchScreen.h>
-#if defined(__SAM3X8E__)
-#undef __FlashStringHelper::F(string_literal)
-#define F(string_literal) string_literal
-#endif
 int awal=0,waktu=0;
 #define YP A3
 #define XM A2
@@ -46,8 +42,7 @@ void setup(void) {
   tft.fillRect(80, 0, 80, 40, BLACK);
   pinMode(13, OUTPUT);
 }
-void loop()
-{
+void loop(){
   waktu++;
   digitalWrite(13, HIGH);
   TSPoint p = ts.getPoint();
@@ -58,7 +53,7 @@ void loop()
     p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
     p.y = (tft.height()-map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
     if (((p.y-PENRADIUS) > 40) && ((p.y+PENRADIUS) < tft.height())) {
-      Serial.print(p.x);Serial.print(",");Serial.print(p.y);Serial.print("\n");
+      Serial.print(p.x);Serial.print(",");Serial.print(p.y);Serial.print("#");
       tft.fillCircle(p.x, p.y, PENRADIUS , BLACK);
       if (awal==0){ 
         px0 = p.x; py0 = p.y;
