@@ -1,19 +1,43 @@
+from flask import Flask,request
 import cv2
 import numpy as np 
-NIM = '123123123' #contohNIM
-Koor = ''' ''' #koordinat dari arduino
+from datetime import datetime
+app = Flask(__name__)
 
-def presensi(nim,koordinat):
+@app.route('/presensi', methods=['POST'])
+def presensi():
+	nim = 0
+	now = datetime.now()
+	current_time = now.strftime("%m%d%H%M")
+	print("Current Time =", current_time)
+	data_mentah = str(request.get_data())[2:-1]
 	koordinatTTD = []
-	for baris in koordinat.split("\n"):
-		if len(baris.split(",")) == 2:
-			X,Y = baris.split(",")
-			koordinatTTD.append([int(X),int(Y)])
+	ep = []
+	sp = []
+	print(data_mentah)
+	for baris in data_mentah.split("#"):
+		print(baris)
+		if len(baris.split(",")) == 3:
+			S,X,Y = baris.split(",")
+			koordinatTTD.append([int(S),int(X),int(Y)])
+		elif len(baris) >= 9:
+			nim = baris
 	print(koordinatTTD)
+	
+	
+	
 	# stackoverflow
-	blank_image = np.zeros((240,340,1), np.uint8)
+	blank_image = np.zeros((340,240,1), np.uint8)
 	for titik in koordinatTTD:
-		X,Y = titik
+		S,X,Y = titik
 		blank_image[Y,X] = 255
-	cv2.imwrite("hasil.png",blank_image)
-presensi(NIM,Koor)
+		if S==0:
+			sp=X,Y
+		elif S==1:
+			ep=sp
+			sp=X,Y
+			blank_image = cv2.line(blank_image, sp, ep, 255, 1)
+	cv2.imwrite(f"{nim}-{current_time}.png",blank_image)
+	return 'ok'
+
+app.run("0.0.0.0",port=6666)
