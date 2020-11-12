@@ -154,7 +154,7 @@ void loop() {
       p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
       p.y = (tft.height() - map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
       if (((p.y - PENRADIUS) > 40) && ((p.y + PENRADIUS) < tft.height())) {
-        Serial.print(p.x); Serial.print(","); Serial.print(p.y); Serial.print("#");
+        Serial.print(awal); Serial.print(","); Serial.print(p.x); Serial.print(","); Serial.print(p.y); Serial.print("#");
         tft.fillCircle(p.x, p.y, PENRADIUS , BLACK);
         if (awal == 0) {
           px0 = p.x; py0 = p.y;
