@@ -1,7 +1,7 @@
 #include <Elegoo_GFX.h>    // Core graphics library
 #include <Elegoo_TFTLCD.h> // Hardware-specific library
 #include <TouchScreen.h>
-int awal=0,waktu=0;
+int awal = 0, waktu = 0;
 #define YP A3
 #define XM A2
 #define YM 9
@@ -34,51 +34,51 @@ void setup(void) {
   Serial.begin(9600);
   tft.reset();
   uint16_t identifier = tft.readID();
-  identifier=0x9341;
+  identifier = 0x9341;
   tft.begin(identifier);
   tft.setRotation(2);
-  tft.fillScreen(WHITE); 
+  tft.fillScreen(WHITE);
   tft.fillRect(0, 0, 80, 40, RED);
   tft.fillRect(80, 0, 80, 40, BLACK);
   pinMode(13, OUTPUT);
 }
-void loop(){
+void loop() {
   waktu++;
   digitalWrite(13, HIGH);
   TSPoint p = ts.getPoint();
   digitalWrite(13, LOW);
   pinMode(XM, OUTPUT);
   pinMode(YP, OUTPUT);
-  if (p.z > MINPRESSURE && p.z < MAXPRESSURE){
+  if (p.z > MINPRESSURE && p.z < MAXPRESSURE) {
     p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
-    p.y = (tft.height()-map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
-    if (((p.y-PENRADIUS) > 40) && ((p.y+PENRADIUS) < tft.height())) {
-      Serial.print(p.x);Serial.print(",");Serial.print(p.y);Serial.print("#");
+    p.y = (tft.height() - map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
+    if (((p.y - PENRADIUS) > 40) && ((p.y + PENRADIUS) < tft.height())) {
+      Serial.print(awal); Serial.print(","); Serial.print(p.x); Serial.print(","); Serial.print(p.y); Serial.print("#");
       tft.fillCircle(p.x, p.y, PENRADIUS , BLACK);
-      if (awal==0){ 
+      if (awal == 0) {
         px0 = p.x; py0 = p.y;
-        waktu=0;
-        awal=1;
+        waktu = 0;
+        awal = 1;
       }
-      else{
+      else {
         px1 = px0; py1 = py0;
         px0 = p.x; py0 = p.y;
-        tft.drawLine(px1, py1, px0, py0, BLACK);  
-        waktu=0;     
+        tft.drawLine(px1, py1, px0, py0, BLACK);
+        waktu = 0;
       }
     }
     if (p.y < 40) {
-       if (p.x < 40) {
-         waktu=0;
-         awal=0;
-         digitalWrite(LCD_RESET, LOW);
-         setup(); 
-       }
-    }
-    
-  }
-  if(waktu>100){
-        waktu=0;
+      if (p.x < 40) {
+        waktu = 0;
         awal = 0;
+        digitalWrite(LCD_RESET, LOW);
+        setup();
       }
+    }
+
+  }
+  if (waktu > 100) {
+    waktu = 0;
+    awal = 0;
+  }
 }
