@@ -10,6 +10,7 @@
 #define BLACK     0x0000
 #define BLUE      0x001F
 #define RED       0xF800
+#define GREEN     0x03E0
 #define WHITE     0xFFFF
 #define ORANGE    0xFD20
 #define DARKGREY  0x7BEF
@@ -48,6 +49,7 @@ uint8_t textfield_i = 0;
 #define MINPRESSURE 1
 #define MAXPRESSURE 1000
 int awal = 0, waktu = 0;
+String nim;
 int px0, px1, py0, py1;
 int currentPage;
 #define PENRADIUS 0.5
@@ -127,14 +129,16 @@ void loop() {
         // presensi or register button to drawing screen
         if (b == 0) {
           //Serial.print("pre#")
-          Serial.print(textfield);
+          nim = textfield;
+          Serial.print(nim);
           Serial.print("#");
           currentPage = 1;
           drawPaint();
         }
         if (b == 2) {
           //Serial.print("reg#")
-          Serial.print(textfield);
+          nim = textfield;
+          Serial.print(nim);
           Serial.print("#");
           currentPage = 1;
           drawPaint();
@@ -154,8 +158,8 @@ void loop() {
       p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
       p.y = (tft.height() - map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
       if (((p.y - PENRADIUS) > 40) && ((p.y + PENRADIUS) < tft.height())) {
-        Serial.print(awal); Serial.print(","); Serial.print(p.x); Serial.print(","); Serial.print(p.y); Serial.print("#");
-        tft.fillCircle(p.x, p.y, PENRADIUS , BLACK);
+        Serial.print(p.x); Serial.print(","); Serial.print(p.y); Serial.print("#");
+        tft.fillCircle(p.x, p.y, PENRADIUS , WHITE);
         if (awal == 0) {
           px0 = p.x; py0 = p.y;
           waktu = 0;
@@ -164,14 +168,30 @@ void loop() {
         else {
           px1 = px0; py1 = py0;
           px0 = p.x; py0 = p.y;
-          tft.drawLine(px1, py1, px0, py0, BLACK);
+          tft.drawLine(px1, py1, px0, py0, WHITE);
           waktu = 0;
         }
       }
       if (p.y < 40) {
-        if (p.x < 40) {
+        if (p.x < 120) {
           waktu = 0;
           awal = 0;
+          currentPage = 1;
+          drawPaint();
+          Serial.print("res\n");
+          Serial.print(nim);
+          Serial.print("#");
+        }
+        else if (p.x > 120) {
+          waktu = 0;
+          awal = 0;
+          Serial.print("sub\n");
+          delay(500);
+          textfield[textfield_i] = 0;
+          while (textfield_i > 0) {
+            textfield_i--;
+            textfield[textfield_i] = ' ';
+          }
           digitalWrite(LCD_RESET, LOW);
           setup();
         }
@@ -201,7 +221,15 @@ void drawNim() {
   tft.drawRect(TEXT_X, TEXT_Y, TEXT_W, TEXT_H, WHITE);
 }
 void drawPaint() {
-  tft.fillScreen(WHITE);
-  tft.fillRect(0, 0, 80, 40, RED);
-  tft.fillRect(80, 0, 80, 40, BLACK);
+  tft.fillScreen(BLACK);
+  tft.fillRect(2, 2, 116, 36, RED);
+  tft.drawRect(2, 2, 116, 36, BLACK);
+  tft.fillRect(122, 2, 116, 36, GREEN);
+  tft.drawRect(122, 2, 116, 36, BLACK);
+  tft.setTextColor(BLACK);
+  tft.setTextSize(2);
+  tft.setCursor(30, 13);
+  tft.print("Reset");
+  tft.setCursor(143, 13);
+  tft.print("Submit");
 }
