@@ -81,6 +81,10 @@ void loop() {
       p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
       p.y = (tft.height() - map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
     }
+    tft.setCursor(10, 65);
+    tft.setTextColor(WHITE);
+    tft.setTextSize(2);
+    tft.print("Masukkan NIM");
     for (uint8_t b = 0; b < 15; b++) {
       if (buttons[b].contains(p.x, p.y)) {
         buttons[b].press(true);  // tell the button it is pressed
@@ -158,7 +162,7 @@ void loop() {
       p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
       p.y = (tft.height() - map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
       if (((p.y - PENRADIUS) > 40) && ((p.y + PENRADIUS) < tft.height())) {
-        Serial.print(p.x); Serial.print(","); Serial.print(p.y); Serial.print("#");
+        Serial.print(awal); Serial.print(","); Serial.print(p.x); Serial.print(","); Serial.print(p.y); Serial.print("#");
         tft.fillCircle(p.x, p.y, PENRADIUS , WHITE);
         if (awal == 0) {
           px0 = p.x; py0 = p.y;
@@ -176,9 +180,10 @@ void loop() {
         if (p.x < 120) {
           waktu = 0;
           awal = 0;
+          Serial.print("res\n");
+          delay(1000);
           currentPage = 1;
           drawPaint();
-          Serial.print("res\n");
           Serial.print(nim);
           Serial.print("#");
         }
@@ -186,7 +191,7 @@ void loop() {
           waktu = 0;
           awal = 0;
           Serial.print("sub\n");
-          delay(500);
+          delay(1000);
           textfield[textfield_i] = 0;
           while (textfield_i > 0) {
             textfield_i--;
