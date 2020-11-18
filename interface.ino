@@ -1,12 +1,19 @@
-#include <Elegoo_GFX.h>    // Core graphics library
-#include <Elegoo_TFTLCD.h> // Hardware-specific library
+#include <Elegoo_GFX.h>    //core graphics library
+#include <Elegoo_TFTLCD.h> //hardware-specific library
 #include <TouchScreen.h>
+
+//declare port
 #define LCD_CS A3 // Chip Select goes to Analog 3
 #define LCD_CD A2 // Command/Data goes to Analog 2
 #define LCD_WR A1 // LCD Write goes to Analog 1
 #define LCD_RD A0 // LCD Read goes to Analog 0
 #define LCD_RESET A4 // Can alternately just connect to Arduino's reset pin
+#define YP A3  // must be an analog pin, use "An" notation!
+#define XM A2  // must be an analog pin, use "An" notation!
+#define YM 9   // can be a digital pin
+#define XP 8   // can be a digital pin
 
+//declare color code
 #define BLACK     0x0000
 #define BLUE      0x001F
 #define RED       0xF800
@@ -15,8 +22,7 @@
 #define ORANGE    0xFD20
 #define DARKGREY  0x7BEF
 
-
-/******************* UI details */
+//UI details
 #define BUTTON_X 40
 #define BUTTON_Y 100
 #define BUTTON_W 60
@@ -25,7 +31,7 @@
 #define BUTTON_SPACING_Y 20
 #define BUTTON_TEXTSIZE 2
 
-// text box where numbers go
+//text box where numbers go
 #define TEXT_X 10
 #define TEXT_Y 10
 #define TEXT_W 220
@@ -36,25 +42,23 @@
 char textfield[TEXT_LEN + 1] = "";
 uint8_t textfield_i = 0;
 
-#define YP A3  // must be an analog pin, use "An" notation!
-#define XM A2  // must be an analog pin, use "An" notation!
-#define YM 9   // can be a digital pin
-#define XP 8   // can be a digital pin
-
-//Touch For New ILI9341 TP
+//touch for new ILI9341 TP
 #define TS_MINX 120
 #define TS_MAXX 900
 #define TS_MINY 70
 #define TS_MAXY 920
 #define MINPRESSURE 1
 #define MAXPRESSURE 1000
-int awal = 0, waktu = 0;
-String nim;
-int px0, px1, py0, py1;
-int currentPage;
-#define PENRADIUS 0.5
+
+int awal = 0, waktu = 0; //set points to be lines
+String nim; //set userID
+int px0, px1, py0, py1; //px0 and py0 for start point, px1 and py1 for end point
+int currentPage; //page code for recent viewed page
+#define PENRADIUS 0.5 //set line boldness
 Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
+
+//set button for inputing NIM
 Elegoo_GFX_Button buttons[15];
 char buttonlabels[15][5] = {"Pre", "", "Reg", "1", "2", "3", "4", "5", "6", "7", "8", "9", "Clr", "0", "Rst"};
 uint16_t buttoncolors[15] = {ORANGE, BLACK, ORANGE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, DARKGREY, BLUE, RED};
@@ -62,12 +66,12 @@ uint16_t buttoncolors[15] = {ORANGE, BLACK, ORANGE, BLUE, BLUE, BLUE, BLUE, BLUE
 void setup() {
   Serial.begin(9600);
   tft.reset();
-  uint16_t identifier = tft.readID();
-  identifier = 0x9341;
+  uint16_t identifier = tft.readID(); 
+  identifier = 0x9341; //depends on your touch screen type
   tft.begin(identifier);
-  tft.setRotation(2);
-  currentPage = 0;
-  drawNim();
+  tft.setRotation(2); //set screen orientation
+  currentPage = 0; //'input NIM' page code
+  drawNim(); //draw 'input NIM' page
 }
 
 void loop() {
@@ -76,6 +80,7 @@ void loop() {
   digitalWrite(13, LOW);
   pinMode(XM, OUTPUT);
   pinMode(YP, OUTPUT);
+  //'input NIM' page loop command
   if (currentPage == 0) {
     if (p.z > MINPRESSURE && p.z < MAXPRESSURE) {
       p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
@@ -98,8 +103,7 @@ void loop() {
         buttons[b].drawButton();  // draw normal
       }
       if (buttons[b].justPressed()) {
-        buttons[b].drawButton(true);  // draw invert!
-        // if a numberpad button, append the relevant # to the textfield
+        buttons[b].drawButton(true);  // draw invert
         if (b >= 3 && b != 12 && b != 14) {
           if (textfield_i < TEXT_LEN) {
             textfield[textfield_i] = buttonlabels[b][0];
@@ -107,7 +111,7 @@ void loop() {
             textfield[textfield_i] = 0; // zero terminate
           }
         }
-        // clr button! delete char
+        // clr button delete char
         if (b == 12) {
           textfield[textfield_i] = 0;
           if (textfield > 0) {
@@ -120,7 +124,7 @@ void loop() {
         tft.setTextColor(TEXT_TCOLOR, BLACK);
         tft.setTextSize(TEXT_TSIZE);
         tft.print(textfield);
-        // reset screen
+        //reset screen
         if (b == 14) {
           textfield[textfield_i] = 0;
           while (textfield_i > 0) {
@@ -130,29 +134,31 @@ void loop() {
           digitalWrite(LCD_RESET, LOW);
           setup();
         }
-        // presensi or register button to drawing screen
+        //presensi or register button to drawing screen
         if (b == 0) {
-          //Serial.print("pre#")
+          //Serial.print("pre#");
           nim = textfield;
           Serial.print(nim);
           Serial.print("#");
-          currentPage = 1;
+          currentPage = 1; //'signature paint' page code
           drawPaint();
         }
         if (b == 2) {
-          //Serial.print("reg#")
+          //Serial.print("reg#");
           nim = textfield;
           Serial.print(nim);
           Serial.print("#");
-          currentPage = 1;
-          drawPaint();
+          currentPage = 1; //'signature paint' page code
+          drawPaint(); //draw 'signature paint' page
         }
-        delay(100); // UI debouncing
+        delay(100); //UI debouncing
       }
     }
   }
+
+  //'signature paint' page loop command
   if (currentPage == 1) {
-    waktu++;
+    waktu++; //counting touch screen delayed
     digitalWrite(13, HIGH);
     TSPoint p = ts.getPoint();
     digitalWrite(13, LOW);
@@ -164,48 +170,55 @@ void loop() {
       if (((p.y - PENRADIUS) > 40) && ((p.y + PENRADIUS) < tft.height())) {
         Serial.print(awal); Serial.print(","); Serial.print(p.x); Serial.print(","); Serial.print(p.y); Serial.print("#");
         tft.fillCircle(p.x, p.y, PENRADIUS , WHITE);
+	//first point of line
         if (awal == 0) {
-          px0 = p.x; py0 = p.y;
-          waktu = 0;
-          awal = 1;
+          px0 = p.x; py0 = p.y; //set start point for making line
+          waktu = 0; //reset delay count
+          awal = 1; //set start point status
         }
+	//next point of line
         else {
-          px1 = px0; py1 = py0;
+          px1 = px0; py1 = py0; 
           px0 = p.x; py0 = p.y;
           tft.drawLine(px1, py1, px0, py0, WHITE);
-          waktu = 0;
+          waktu = 0; //reset delay count
         }
       }
+      //button pressed
       if (p.y < 40) {
+	//'reset' button pressed
         if (p.x < 120) {
           waktu = 0;
           awal = 0;
-          Serial.print("res\n");
+          Serial.print("res\n"); //send reset command to slave
           delay(1000);
           currentPage = 1;
-          drawPaint();
+          drawPaint(); //reset paint field
           Serial.print(nim);
           Serial.print("#");
         }
+	//'submit' button pressed
         else if (p.x > 120) {
           waktu = 0;
           awal = 0;
-          Serial.print("sub\n");
+          Serial.print("sub\n"); //send submit command to slave
           delay(1000);
+	  //reset NIM
           textfield[textfield_i] = 0;
           while (textfield_i > 0) {
             textfield_i--;
             textfield[textfield_i] = ' ';
           }
-          digitalWrite(LCD_RESET, LOW);
+          digitalWrite(LCD_RESET, LOW); //reset screen
           setup();
         }
       }
 
     }
+    //screen is not pressed in 100 ms
     if (waktu > 100) {
-      waktu = 0;
-      awal = 0;
+      waktu = 0; //reset delay count
+      awal = 0; //set next point is new start point
     }
   }
 }
