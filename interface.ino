@@ -19,16 +19,15 @@
 #define RED       0xF800
 #define GREEN     0x03E0
 #define WHITE     0xFFFF
-#define ORANGE    0xFD20
 #define DARKGREY  0x7BEF
 
 //UI details
 #define BUTTON_X 40
-#define BUTTON_Y 100
-#define BUTTON_W 60
-#define BUTTON_H 30
-#define BUTTON_SPACING_X 20
-#define BUTTON_SPACING_Y 20
+#define BUTTON_Y 110
+#define BUTTON_W 70
+#define BUTTON_H 35
+#define BUTTON_SPACING_X 10
+#define BUTTON_SPACING_Y 10
 #define BUTTON_TEXTSIZE 2
 
 //text box where numbers go
@@ -52,6 +51,8 @@ uint8_t textfield_i = 0;
 
 int awal = 0, waktu = 0; //set points to be lines
 String nim; //set userID
+String stat; // set session status
+String entryInfo;
 int px0, px1, py0, py1; //px0 and py0 for start point, px1 and py1 for end point
 int currentPage; //page code for recent viewed page
 #define PENRADIUS 0.5 //set line boldness
@@ -59,9 +60,9 @@ Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 //set button for inputing NIM
-Elegoo_GFX_Button buttons[15];
-char buttonlabels[15][5] = {"Pre", "", "Reg", "1", "2", "3", "4", "5", "6", "7", "8", "9", "Clr", "0", "Rst"};
-uint16_t buttoncolors[15] = {ORANGE, BLACK, ORANGE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, DARKGREY, BLUE, RED};
+Elegoo_GFX_Button buttons[12];
+char buttonlabels[12][6] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "Clear", "0", "Reset"};
+uint16_t buttoncolors[12] = {BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, DARKGREY, BLUE, RED};
 
 void setup() {
   Serial.begin(9600);
@@ -71,7 +72,7 @@ void setup() {
   tft.begin(identifier);
   tft.setRotation(2); //set screen orientation
   currentPage = 0; //'input NIM' page code
-  drawNim(); //draw 'input NIM' page
+  drawStatus(); //draw 'input NIM' page
 }
 
 void loop() {
@@ -80,31 +81,69 @@ void loop() {
   digitalWrite(13, LOW);
   pinMode(XM, OUTPUT);
   pinMode(YP, OUTPUT);
-  //'input NIM' page loop command
+  
   if (currentPage == 0) {
     if (p.z > MINPRESSURE && p.z < MAXPRESSURE) {
       p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
       p.y = (tft.height() - map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
     }
-    tft.setCursor(10, 65);
-    tft.setTextColor(WHITE);
-    tft.setTextSize(2);
-    tft.print("Masukkan NIM");
-    for (uint8_t b = 0; b < 15; b++) {
+    if (p.x > TEXT_X && p.x < (TEXT_X + TEXT_W)){
+      if (p.y > 150 && p.y < 185){
+        stat = "reg#";
+        Serial.print(stat);
+        delay(100);
+        currentPage=1;
+        drawNim();
+      }
+      if (p.y > 200 && p.y < 235){
+        stat = "pre#";
+        Serial.print(stat);
+        delay(100);
+        currentPage=1;
+        drawNim();
+      }
+    }
+  }
+  //'input NIM' page loop command
+  if (currentPage == 1) {
+    if (p.z > MINPRESSURE && p.z < MAXPRESSURE) {
+      p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
+      p.y = (tft.height() - map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
+    }
+    if (p.x > TEXT_X && p.x < (TEXT_X + TEXT_W)){
+      if (p.y > 275 && p.y < 310){
+        if(textfield_i==9){
+          nim = textfield;
+          Serial.print(nim+"#");
+          currentPage = 2; //'signature paint' page code
+          drawPaint(); //draw 'signature paint' page
+        }
+        if(textfield_i!=9){
+          textfield_i = 0;
+          textfield[textfield_i] = ' ';
+          Serial.println("res");
+          drawError();
+          delay(1000);
+          digitalWrite(LCD_RESET, LOW); //reset screen
+          setup();
+        }
+      }
+    }
+    for (uint8_t b = 0; b < 12; b++) {
       if (buttons[b].contains(p.x, p.y)) {
         buttons[b].press(true);  // tell the button it is pressed
       } else {
         buttons[b].press(false);  // tell the button it is NOT pressed
       }
     }
-    for (uint8_t b = 0; b < 15; b++) {
+    for (uint8_t b = 0; b < 12; b++) {
       if (buttons[b].justReleased()) {
         // Serial.print("Released: "); Serial.println(b);
         buttons[b].drawButton();  // draw normal
       }
       if (buttons[b].justPressed()) {
         buttons[b].drawButton(true);  // draw invert
-        if (b >= 3 && b != 12 && b != 14) {
+        if (b < 9 || b==10) {
           if (textfield_i < TEXT_LEN) {
             textfield[textfield_i] = buttonlabels[b][0];
             textfield_i++;
@@ -112,7 +151,7 @@ void loop() {
           }
         }
         // clr button delete char
-        if (b == 12) {
+        if (b == 9) {
           textfield[textfield_i] = 0;
           if (textfield > 0) {
             textfield_i--;
@@ -125,31 +164,16 @@ void loop() {
         tft.setTextSize(TEXT_TSIZE);
         tft.print(textfield);
         //reset screen
-        if (b == 14) {
+        if (b == 11) {
           textfield[textfield_i] = 0;
           while (textfield_i > 0) {
             textfield_i--;
             textfield[textfield_i] = ' ';
           }
-          digitalWrite(LCD_RESET, LOW);
-          setup();
-        }
-        //presensi or register button to drawing screen
-        if (b == 0) {
-          //Serial.print("pre#");
-          nim = textfield;
-          Serial.print(nim);
-          Serial.print("#");
-          currentPage = 1; //'signature paint' page code
-          drawPaint();
-        }
-        if (b == 2) {
-          //Serial.print("reg#");
-          nim = textfield;
-          Serial.print(nim);
-          Serial.print("#");
-          currentPage = 1; //'signature paint' page code
-          drawPaint(); //draw 'signature paint' page
+          Serial.println("res");
+          Serial.print(stat);
+          currentPage=1;
+          drawNim();
         }
         delay(100); //UI debouncing
       }
@@ -157,7 +181,7 @@ void loop() {
   }
 
   //'signature paint' page loop command
-  if (currentPage == 1) {
+  if (currentPage == 2) {
     waktu++; //counting touch screen delayed
     digitalWrite(13, HIGH);
     TSPoint p = ts.getPoint();
@@ -192,8 +216,9 @@ void loop() {
           awal = 0;
           Serial.print("res\n"); //send reset command to slave
           delay(1000);
-          currentPage = 1;
+          currentPage = 2;
           drawPaint(); //reset paint field
+          Serial.print(stat);
           Serial.print(nim);
           Serial.print("#");
         }
@@ -201,53 +226,147 @@ void loop() {
         else if (p.x > 120) {
           waktu = 0;
           awal = 0;
+          textfield_i = 0;
+          textfield[textfield_i] = ' ';
           Serial.print("sub\n"); //send submit command to slave
           delay(1000);
-	  //reset NIM
-          textfield[textfield_i] = 0;
-          while (textfield_i > 0) {
-            textfield_i--;
-            textfield[textfield_i] = ' ';
-          }
-          digitalWrite(LCD_RESET, LOW); //reset screen
-          setup();
+          drawEntry();
+          currentPage=3;
         }
       }
 
     }
     //screen is not pressed in 100 ms
-    if (waktu > 100) {
+    if (waktu > 50) {
       waktu = 0; //reset delay count
       awal = 0; //set next point is new start point
     }
   }
+  if (currentPage == 3) {
+    if(stat=="reg#"){
+      tft.setCursor(45, 155);
+      tft.setTextColor(WHITE);
+      tft.print("Menyimpan...");
+      while (!Serial.available());
+      tft.fillScreen(BLACK);
+      String var1 = Serial.readStringUntil(','); // writes in the string all the inputs till a comma
+      Serial.read(); 
+      String var2 = Serial.readStringUntil('\n');
+      tft.setCursor(10, 100);
+      tft.setTextColor(WHITE);
+      tft.print(var1);
+      tft.setCursor(10, 140);
+      tft.setTextColor(WHITE);
+      tft.print(var2);
+    }
+    if(stat=="pre#"){
+      tft.setCursor(30, 155);
+      tft.setTextColor(WHITE);
+      tft.print("Menganalisa...");
+      while (!Serial.available());
+      tft.fillScreen(BLACK);
+      String var1 = Serial.readStringUntil(','); // writes in the string all the inputs till a comma
+      Serial.read(); 
+      String var2 = Serial.readStringUntil(',');
+      Serial.read(); 
+      String var3 = Serial.readStringUntil('\n');
+      tft.setCursor(10, 60);
+      tft.setTextColor(WHITE);
+      tft.print("Hasil Identifikasi");
+      tft.setCursor(10, 100);
+      tft.setTextColor(WHITE);
+      tft.print("Threshold= ");
+      tft.print(var1);
+      tft.setCursor(10, 140);
+      tft.setTextColor(WHITE);
+      tft.print("Nilai TTD= ");
+      tft.print(var2);
+      tft.setCursor(10, 180);
+      tft.setTextColor(WHITE);
+      tft.print("Hasil    = ");
+      if(var3=="COCOK"){
+        tft.drawRoundRect(TEXT_X-1, 224, TEXT_W, 37, 8, WHITE);
+        tft.fillRoundRect(TEXT_X, 225, TEXT_W-2, 35, 8, GREEN);
+        tft.setCursor(80, 235);
+        tft.print(var3);
+      }
+      else{
+        tft.drawRoundRect(TEXT_X-1, 274, TEXT_W, 37, 8, WHITE);
+        tft.fillRoundRect(TEXT_X, 275, TEXT_W-2, 35, 8, RED);
+        tft.setCursor(50, 285);
+        tft.print(var3);
+      }
+    }
+    delay(8000);
+    digitalWrite(LCD_RESET, LOW); //reset screen
+    setup();
+  }
+}
+
+
+void drawStatus(){
+  tft.fillScreen(BLACK);
+  tft.setTextSize(2);
+  tft.setCursor(40, 80);
+  tft.setTextColor(WHITE);
+  tft.print("Selamat Datang");
+  tft.setCursor(20, 110);
+  tft.setTextColor(WHITE);
+  tft.print("Aplikasi Presensi");
+  tft.drawRoundRect(TEXT_X-1, 149, TEXT_W, 37, 8, WHITE);
+  tft.fillRoundRect(TEXT_X, 150, TEXT_W-2, 35, 8, GREEN);
+  tft.drawRoundRect(TEXT_X-1, 199, TEXT_W, 37, 8, WHITE);
+  tft.fillRoundRect(TEXT_X, 200, TEXT_W-2, 35, 8, GREEN);
+  tft.setCursor(65, 160);
+  tft.print("Registrasi");
+  tft.setCursor(75, 210);
+  tft.print("Presensi");
 }
 void drawNim() {
   tft.fillScreen(BLACK);
-  for (uint8_t row = 0; row < 5; row++) {
+  tft.setCursor(10, 65);
+  tft.setTextColor(WHITE);
+  tft.setTextSize(2);
+  tft.print("Masukkan NIM");
+  for (uint8_t row = 0; row < 4; row++) {
     for (uint8_t col = 0; col < 3; col++) {
       buttons[col + row * 3].initButton(&tft, BUTTON_X + col * (BUTTON_W + BUTTON_SPACING_X),
                                         BUTTON_Y + row * (BUTTON_H + BUTTON_SPACING_Y), // x, y, w, h, outline, fill, text
                                         BUTTON_W, BUTTON_H, WHITE, buttoncolors[col + row * 3], WHITE,
                                         buttonlabels[col + row * 3], BUTTON_TEXTSIZE);
-      if ((col + row * 3) != 1) {
-        buttons[col + row * 3].drawButton();
-      }
+      buttons[col + row * 3].drawButton();
     }
   }
   // create 'text field'
+  tft.drawRoundRect(TEXT_X-1, 274, TEXT_W, 37, 8, WHITE);
+  tft.fillRoundRect(TEXT_X, 275, TEXT_W-2, 35, 8, GREEN);
+  tft.setCursor(95, 285);
+  tft.print("Next");
   tft.drawRect(TEXT_X, TEXT_Y, TEXT_W, TEXT_H, WHITE);
 }
 void drawPaint() {
   tft.fillScreen(BLACK);
-  tft.fillRect(2, 2, 116, 36, RED);
-  tft.drawRect(2, 2, 116, 36, BLACK);
-  tft.fillRect(122, 2, 116, 36, GREEN);
-  tft.drawRect(122, 2, 116, 36, BLACK);
-  tft.setTextColor(BLACK);
+  tft.drawRect(2, 41, 237, 278, WHITE);
+  tft.fillRoundRect(3, 3, 114, 34, 8, RED);
+  tft.drawRoundRect(2, 2, 116, 36, 8, WHITE);
+  tft.fillRoundRect(122, 2, 116, 36, 8, GREEN);
+  tft.drawRoundRect(122, 2, 116, 36, 8, WHITE);
+  tft.setTextColor(WHITE);
   tft.setTextSize(2);
   tft.setCursor(30, 13);
   tft.print("Reset");
   tft.setCursor(143, 13);
   tft.print("Submit");
+}
+void drawError(){
+  tft.fillScreen(BLACK);
+  tft.setTextSize(2);
+  tft.setCursor(50, 155);
+  tft.setTextColor(WHITE);
+  tft.print("Invalid NIM");
+}
+void drawEntry(){
+  tft.fillScreen(BLACK);
+  tft.setTextSize(2);
+  tft.setTextColor(WHITE);
 }
