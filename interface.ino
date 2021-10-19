@@ -245,56 +245,68 @@ void loop() {
   if (currentPage == 3) {
     if(stat=="reg#"){
       tft.setCursor(45, 155);
-      tft.setTextColor(WHITE);
       tft.print("Menyimpan...");
       while (!Serial.available());
       tft.fillScreen(BLACK);
       String var1 = Serial.readStringUntil(','); // writes in the string all the inputs till a comma
       Serial.read(); 
       String var2 = Serial.readStringUntil('\n');
-      tft.setCursor(10, 100);
-      tft.setTextColor(WHITE);
-      tft.print(var1);
-      tft.setCursor(10, 140);
-      tft.setTextColor(WHITE);
-      tft.print(var2);
+      tft.setCursor(65, 100);
+      tft.setTextColor(GREEN);
+      tft.print("Tersimpan");
+      if (var2.toInt()<10){
+        tft.setTextColor(WHITE);
+        tft.setCursor(15, 140);
+        tft.print("Silakan registrasi");
+        tft.setCursor(60, 180);
+        tft.print(10-var2.toInt());
+        tft.print(" kali lagi");
+      }
+      else{
+        tft.setTextColor(WHITE);
+        tft.setCursor(40, 140);
+        tft.print("Regitrasi Anda");
+        tft.setCursor(45, 160);
+        tft.print("sudah lengkap");
+        tft.setCursor(40, 200);
+        tft.setTextColor(GREEN);
+        tft.print("Selamat Datang");
+        tft.setCursor(70, 220);
+        tft.print(nim);
+      }
     }
     if(stat=="pre#"){
-      tft.setCursor(30, 155);
-      tft.setTextColor(WHITE);
-      tft.print("Menganalisa...");
+      tft.setCursor(5, 155);
+      tft.print("Mengidentifikasi...");
       while (!Serial.available());
       tft.fillScreen(BLACK);
       String var1 = Serial.readStringUntil(','); // writes in the string all the inputs till a comma
       Serial.read(); 
-      String var2 = Serial.readStringUntil(',');
-      Serial.read(); 
-      String var3 = Serial.readStringUntil('\n');
-      tft.setCursor(10, 60);
-      tft.setTextColor(WHITE);
+      String var2 = Serial.readStringUntil('\n');
+      tft.setCursor(15, 60);
       tft.print("Hasil Identifikasi");
-      tft.setCursor(10, 100);
-      tft.setTextColor(WHITE);
-      tft.print("Threshold= ");
+      tft.setCursor(25, 100);
+      tft.print("Threshold = ");
       tft.print(var1);
-      tft.setCursor(10, 140);
-      tft.setTextColor(WHITE);
-      tft.print("Nilai TTD= ");
+      tft.setCursor(25, 140);
+      tft.print("Nilai TTD = ");
       tft.print(var2);
-      tft.setCursor(10, 180);
-      tft.setTextColor(WHITE);
-      tft.print("Hasil    = ");
-      if(var3=="COCOK"){
-        tft.drawRoundRect(TEXT_X-1, 224, TEXT_W, 37, 8, WHITE);
-        tft.fillRoundRect(TEXT_X, 225, TEXT_W-2, 35, 8, GREEN);
-        tft.setCursor(80, 235);
-        tft.print(var3);
+      if(var2.toFloat()>=var1.toFloat()){
+        tft.fillRect(0, 180, 240, 35, GREEN);
+        tft.setCursor(95, 190);
+        tft.print("COCOK");
+        tft.setCursor(40, 230);
+        tft.setTextColor(GREEN);
+        tft.print("Selamat Datang");
+        tft.setCursor(70, 260);
+        tft.print(nim);
       }
       else{
-        tft.drawRoundRect(TEXT_X-1, 274, TEXT_W, 37, 8, WHITE);
-        tft.fillRoundRect(TEXT_X, 275, TEXT_W-2, 35, 8, RED);
-        tft.setCursor(50, 285);
-        tft.print(var3);
+        tft.fillRect(0, 180, 240, 35, RED);
+        tft.setCursor(55, 190);
+        tft.print("TIDAK COCOK");
+        tft.setCursor(40, 230);
+        tft.print("Silakan ulangi");
       }
     }
     delay(8000);
@@ -311,7 +323,6 @@ void drawStatus(){
   tft.setTextColor(WHITE);
   tft.print("Selamat Datang");
   tft.setCursor(20, 110);
-  tft.setTextColor(WHITE);
   tft.print("Aplikasi Presensi");
   tft.drawRoundRect(TEXT_X-1, 149, TEXT_W, 37, 8, WHITE);
   tft.fillRoundRect(TEXT_X, 150, TEXT_W-2, 35, 8, GREEN);
